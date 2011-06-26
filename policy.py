@@ -19,5 +19,17 @@
 
 from Zorp.Core import *
 
+InetZone(name="clients",
+	 addr=["172.16.10.0/23", ], 
+	 inbound_services=["*"],
+	 outbound_services=["*"]
+	)
+
+InetZone(name="servers",
+	 addr=["172.16.20.0/23", ],
+	 inbound_services=["*"],
+	 outbound_services=["*"]
+	)
+
 def zorp_instance():
 	pass

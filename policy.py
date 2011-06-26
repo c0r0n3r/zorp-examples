@@ -32,4 +32,25 @@ InetZone(name="servers",
 	)
 
 def zorp_instance():
-	pass
+	#transparent tcp dispatcher
+	NDimensionDispatcher(bindto=DBSockAddr(SockAddrInet('172.16.10.254', 50000),
+					       ZD_PROTO_TCP),
+			     transparent=TRUE,
+		rules=(
+		)
+	)
+
+	#non-transparent tcp dispatcher
+	NDimensionDispatcher(bindto=DBSockAddr(SockAddrInet('172.16.10.254', 50080),
+					       ZD_PROTO_TCP),
+			     transparent=FALSE,
+		rules=(
+		)
+	)
+
+	#udp dispatcher
+	NDimensionDispatcher(bindto=DBSockAddr(SockAddrInet('172.16.10.254', 60000),
+					       ZD_PROTO_UDP),
+		rules=(
+		)
+	)

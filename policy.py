@@ -44,6 +44,11 @@ def zorp_instance():
 		router=DirectedRouter(dest_addr=SockAddrInet('172.16.20.254', 80)
 		)
 	)
+	Service(name="service_http_nontransparent_inband",
+		proxy_class=HttpProxyNonTransparent,
+		router=InbandRouter(forge_port=TRUE
+		)
+	)
 
 	#transparent tcp dispatcher
 	NDimensionDispatcher(bindto=DBSockAddr(SockAddrInet('172.16.10.254', 50000),
@@ -69,6 +74,12 @@ def zorp_instance():
 					       ZD_PROTO_TCP),
 			     transparent=FALSE,
 		rules=(
+            		{
+			 'dst_port'   : 50080,
+			 'dst_subnet' : ('172.16.10.254', ),
+			 'src_zone'   : ('clients', ),
+			 'service'    : 'service_http_nontransparent_inband'
+			},
 		)
 	)
 

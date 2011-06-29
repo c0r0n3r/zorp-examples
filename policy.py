@@ -19,6 +19,7 @@
 
 from Zorp.Core import *
 
+from Zorp.Ftp import *
 from Zorp.Http import *
 
 InetZone(name="clients",
@@ -50,11 +51,23 @@ def zorp_instance():
 		)
 	)
 
+	#ftp services
+	Service(name="service_ftp_transparent",
+		proxy_class=FtpProxyRO,
+		router=TransparentRouter()
+	)
+
 	#transparent tcp dispatcher
 	NDimensionDispatcher(bindto=DBSockAddr(SockAddrInet('172.16.10.254', 50000),
 					       ZD_PROTO_TCP),
 			     transparent=TRUE,
 		rules=(
+            		{
+			 'dst_port' : 21,
+			 'src_zone' : ('clients', ),
+			 'dst_zone' : ('servers', ),
+			 'service'  : 'service_ftp_transparent'
+			},
             		{
 			 'dst_port' : 80,
 			 'src_zone' : ('clients', ),

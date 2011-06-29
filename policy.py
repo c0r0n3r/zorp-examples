@@ -21,6 +21,8 @@ from Zorp.Core import *
 
 from Zorp.Ftp import *
 from Zorp.Http import *
+from Zorp.Pop3 import *
+from Zorp.Smtp import *
 
 InetZone(name="clients",
 	 addr=["172.16.10.0/23", ], 
@@ -32,6 +34,13 @@ InetZone(name="servers",
 	 addr=["172.16.20.0/23", ],
 	 inbound_services=["*"],
 	 outbound_services=["*"]
+	)
+
+InetZone(name="servers.audit",
+	 addr=["172.16.21.1/32", ],
+	 inbound_services=["*"],
+	 outbound_services=["*"],
+	 admin_parent="servers"
 	)
 
 class FtpProxyNonTransparent(FtpProxy):
@@ -123,5 +132,55 @@ def zorp_instance():
 	NDimensionDispatcher(bindto=DBSockAddr(SockAddrInet('172.16.10.254', 60000),
 					       ZD_PROTO_UDP),
 		rules=(
+		)
+	)
+
+def audit_instance():
+	Service(name="service_ftp_transparent_audit",
+		proxy_class=FtpProxy,
+		router=TransparentRouter()
+	)
+	Service(name="service_http_transparent_audit",
+		proxy_class=HttpProxy,
+		router=TransparentRouter()
+	)
+	Service(name="service_pop3_transparent_audit",
+		proxy_class=Pop3Proxy,
+		router=TransparentRouter()
+	)
+	Service(name="service_smtp_transparent_audit",
+		proxy_class=SmtpProxy,
+		router=TransparentRouter()
+	)
+
+	#transparent tcp dispatcher
+	NDimensionDispatcher(bindto=DBSockAddr(SockAddrInet('172.16.10.254', 70000),
+					       ZD_PROTO_TCP),
+			     transparent=TRUE,
+		rules=(
+            		{
+			 'dst_port' : 21,
+			 'src_zone' : ('clients', ),
+			 'dst_zone' : ('servers.audit', ),
+			 'service'  : 'service_ftp_transparent_audit'
+			},
+            		{
+			 'dst_port' : 80,
+			 'src_zone' : ('clients', ),
+			 'dst_zone' : ('servers.audit', ),
+			 'service'  : 'service_http_transparent_audit'
+			},
+            		{
+			 'dst_port' : 110,
+			 'src_zone' : ('clients', ),
+			 'dst_zone' : ('servers.audit', ),
+			 'service'  : 'service_pop3_transparent_audit'
+			},
+            		{
+			 'dst_port' : 25,
+			 'src_zone' : ('clients', ),
+			 'dst_zone' : ('servers.audit', ),
+			 'service'  : 'service_smtp_transparent_audit'
+			},
 		)
 	)

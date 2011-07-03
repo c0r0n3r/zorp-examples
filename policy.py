@@ -43,6 +43,13 @@ InetZone(name="servers.audit",
 	 admin_parent="servers"
 	)
 
+InetZone(name="servers.stack_clamav",
+	 addr=["172.16.21.5/32", ],
+	 inbound_services=["*"],
+	 outbound_services=["*"],
+	 admin_parent="servers"
+	)
+
 class FtpProxyNonTransparent(FtpProxy):
 	def config(self):
 		FtpProxy.config(self)
@@ -184,3 +191,30 @@ def audit_instance():
 			},
 		)
 	)
+
+class HttpProxyStackClamav(HttpProxy):
+    def config(self):
+        HttpProxy.config(self)
+        self.keep_persistent = TRUE
+        self.response_stack["GET"] = (HTTP_STK_DATA, (Z_STACK_PROGRAM, '/etc/zorp/scripts/clamav_stack.py'))
+
+def stack_instance():
+	Service(name="service_http_transparent_stack_clamav",
+		proxy_class=HttpProxyStackClamav,
+		router=TransparentRouter()
+	)
+
+	#transparent tcp dispatcher
+	NDimensionDispatcher(bindto=DBSockAddr(SockAddrInet('172.16.10.254', 80000),
+					       ZD_PROTO_TCP),
+			     transparent=TRUE,
+		rules=(
+            		{
+			 'dst_port' : 80,
+			 'src_zone' : ('clients', ),
+			 'dst_zone' : ('servers.stack_clamav', ),
+			 'service'  : 'service_http_transparent_stack_clamav'
+			},
+		)
+	)
+

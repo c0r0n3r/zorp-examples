@@ -86,10 +86,28 @@ InetZone(name="servers.http_header_replace",
 	 admin_parent="servers"
 	)
 
+InetZone(name="servers.http_url_filter",
+	 addr=["172.16.21.29/32", ],
+	 inbound_services=["*"],
+	 outbound_services=["*"],
+	 admin_parent="servers"
+	)
+
 class HttpProxyHeaderReplace(HttpProxy):
 	def config(self):
 		HttpProxy.config(self)
 		self.request_header["User-Agent"] = (HTTP_HDR_CHANGE_VALUE, "Forged Browser 1.0")
+
+class HttpProxyUrlFilter(HttpProxy):
+        def config(self):
+                HttpProxy.config(self)
+                self.request["GET"] = (HTTP_REQ_POLICY, self.filterURL)
+
+        def filterURL(self, method, url, version):
+                if (url == "http://server_disallowed.zorp/"):
+                        self.error_info = 'Access of this content is denied by the local policy.'
+                        return HTTP_REQ_REJECT
+                return HTTP_REQ_ACCEPT
 
 class FtpProxyNonTransparent(FtpProxy):
 	def config(self):
@@ -128,6 +146,10 @@ def zorp_instance():
 	)
 	Service(name="service_http_transparent_header_replace",
 		proxy_class=HttpProxyHeaderReplace,
+		router=TransparentRouter()
+	)
+	Service(name="service_http_transparent_url_filter",
+		proxy_class=HttpProxyUrlFilter,
 		router=TransparentRouter()
 	)
 	Service(name="service_http_nontransparent_inband",
@@ -183,6 +205,12 @@ def zorp_instance():
 			 'src_zone' : ('clients', ),
 			 'dst_zone' : ('servers.http_header_replace', ),
 			 'service'  : 'service_http_transparent_header_replace'
+			},
+            		{
+			 'dst_port' : 80,
+			 'src_zone' : ('clients', ),
+			 'dst_zone' : ('servers.http_url_filter', ),
+			 'service'  : 'service_http_transparent_url_filter'
 			},
             		{
 			 'dst_port' : 8080,

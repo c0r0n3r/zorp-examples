@@ -325,6 +325,11 @@ class HttpProxyStackClamav(HttpProxy):
         self.keep_persistent = TRUE
         self.response_stack["GET"] = (HTTP_STK_DATA, (Z_STACK_PROGRAM, '/etc/zorp/scripts/clamav_stack.py'))
 
+class FtpProxyStackClamav(FtpProxy):
+    def config(self):
+        FtpProxy.config(self)
+        self.request_stack["RETR"]=(FTP_STK_DATA, (Z_STACK_PROGRAM, '/etc/zorp/scripts/clamav_stack.py'))
+
 def stack_instance():
 	Service(name="service_http_transparent_stack_cat",
 		proxy_class=HttpProxyStackCat,
@@ -336,6 +341,10 @@ def stack_instance():
 	)
 	Service(name="service_http_transparent_stack_clamav",
 		proxy_class=HttpProxyStackClamav,
+		router=TransparentRouter()
+	)
+	Service(name="service_ftp_transparent_stack_clamav",
+		proxy_class=FtpProxyStackClamav,
 		router=TransparentRouter()
 	)
 
@@ -361,6 +370,12 @@ def stack_instance():
 			 'src_zone' : ('clients', ),
 			 'dst_zone' : ('servers.stack_clamav', ),
 			 'service'  : 'service_http_transparent_stack_clamav'
+			},
+            		{
+			 'dst_port' : 21,
+			 'src_zone' : ('clients', ),
+			 'dst_zone' : ('servers.stack_clamav', ),
+			 'service'  : 'service_ftp_transparent_stack_clamav'
 			},
 		)
 	)

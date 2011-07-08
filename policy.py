@@ -18,6 +18,7 @@
 #############################################################################
 
 from Zorp.Core import *
+from Zorp.Proxy import *
 
 from Zorp.Ftp import *
 from Zorp.Http import *
@@ -83,6 +84,11 @@ def zorp_instance():
 		)
 	)
 
+	#smtp services
+	Service(name="service_smtp_transparent",
+		proxy_class=SmtpProxy,
+		router=TransparentRouter()
+	)
 	#transparent tcp dispatcher
 	NDimensionDispatcher(bindto=DBSockAddr(SockAddrInet('172.16.10.254', 50000),
 					       ZD_PROTO_TCP),
@@ -104,6 +110,12 @@ def zorp_instance():
 			 'dst_port' : 8080,
 			 'src_zone' : ('clients', ),
 			 'service'  : 'service_http_transparent_directed'
+			},
+			{
+			 'dst_port': 25,
+			 'src_zone': ('clients'),
+			 'dst_zone': ('servers'),
+			 'service': 'service_smtp_transparent'
 			},
 		)
 	)

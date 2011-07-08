@@ -58,6 +58,13 @@ InetZone(name="servers.smtp_starttls",
 	 admin_parent="servers"
 	)
 
+InetZone(name="servers.smtp_one_sided_ssl",
+	 addr=["172.16.21.13/32", ],
+	 inbound_services=["*"],
+	 outbound_services=["*"],
+	 admin_parent="servers"
+	)
+
 class FtpProxyNonTransparent(FtpProxy):
 	def config(self):
 		FtpProxy.config(self)
@@ -75,6 +82,12 @@ class SmtpProxyStartTls(SmtpProxy):
                                               )
 		self.ssl.server_verify_type = SSL_VERIFY_OPTIONAL_UNTRUSTED
 
+class SmtpProxyOneSideSsl(SmtpProxy):
+	def config(self):
+		SmtpProxy.config(self)
+		self.relay_zones=("*",)
+		self.ssl.server_connection_security=SSL_FORCE_SSL
+		self.ssl.server_verify_type=SSL_VERIFY_OPTIONAL_UNTRUSTED
 
 def zorp_instance():
 	#http services
@@ -113,6 +126,10 @@ def zorp_instance():
 		proxy_class=SmtpProxyStartTls,
 		router=TransparentRouter()
 	)
+	Service(name="service_smtp_transparent_one_sided_ssl",
+		proxy_class=SmtpProxyOneSideSsl,
+		router=DirectedRouter(dest_addr=(SockAddrInet('172.16.20.254', 465),))
+	)
 
 	#transparent tcp dispatcher
 	NDimensionDispatcher(bindto=DBSockAddr(SockAddrInet('172.16.10.254', 50000),
@@ -147,6 +164,12 @@ def zorp_instance():
 			 'src_zone': ('clients'),
 			 'dst_zone': ('servers.smtp_starttls'),
 			 'service': 'service_smtp_transparent_starttls'
+			},
+			{
+			 'dst_port': 25,
+			 'src_zone': ('clients'),
+			 'dst_zone': ('servers.smtp_one_sided_ssl'),
+			 'service': 'service_smtp_transparent_one_sided_ssl'
 			},
 		)
 	)

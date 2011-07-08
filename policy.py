@@ -51,10 +51,30 @@ InetZone(name="servers.stack_clamav",
 	 admin_parent="servers"
 	)
 
+InetZone(name="servers.smtp_starttls",
+	 addr=["172.16.21.9/32", ],
+	 inbound_services=["*"],
+	 outbound_services=["*"],
+	 admin_parent="servers"
+	)
+
 class FtpProxyNonTransparent(FtpProxy):
 	def config(self):
 		FtpProxy.config(self)
 		self.transparent_mode=FALSE
+
+class SmtpProxyStartTls(SmtpProxy):
+	def config(self):
+		SmtpProxy.config(self)
+		self.relay_zones=("*",)
+		self.ssl.client_connection_security = SSL_ACCEPT_STARTTLS
+		self.ssl.client_verify_type = SSL_VERIFY_OPTIONAL_UNTRUSTED
+		self.ssl.client_keypair_files=(
+					       "/etc/ssl/certs/ssl-cert-snakeoil.pem",
+					       "/etc/ssl/private/ssl-cert-snakeoil.key"
+                                              )
+		self.ssl.server_verify_type = SSL_VERIFY_OPTIONAL_UNTRUSTED
+
 
 def zorp_instance():
 	#http services
@@ -89,6 +109,11 @@ def zorp_instance():
 		proxy_class=SmtpProxy,
 		router=TransparentRouter()
 	)
+	Service(name="service_smtp_transparent_starttls",
+		proxy_class=SmtpProxyStartTls,
+		router=TransparentRouter()
+	)
+
 	#transparent tcp dispatcher
 	NDimensionDispatcher(bindto=DBSockAddr(SockAddrInet('172.16.10.254', 50000),
 					       ZD_PROTO_TCP),
@@ -116,6 +141,12 @@ def zorp_instance():
 			 'src_zone': ('clients'),
 			 'dst_zone': ('servers'),
 			 'service': 'service_smtp_transparent'
+			},
+			{
+			 'dst_port': 25,
+			 'src_zone': ('clients'),
+			 'dst_zone': ('servers.smtp_starttls'),
+			 'service': 'service_smtp_transparent_starttls'
 			},
 		)
 	)

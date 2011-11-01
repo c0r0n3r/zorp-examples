@@ -1,0 +1,35 @@
+<authorgroup>
+  <author>
+    <firstname>Szilárd</firstname>
+    <surname>Pfeiffer</surname>
+    <affiliation>
+      <shortaffil>Software Developer, BalaBit IT Security</shortaffil>
+      <jobtitle>Senior Software Developer</jobtitle>
+      <orgname>BalaBit IT Security, Ltd.</orgname>
+      <orgdiv>Development</orgdiv>
+    </affiliation>
+  </author>
+</authorgroup>
+
+<copyright>
+  <year>2012</year>
+  <year>2013</year>
+  <holder>Szilárd Pfeiffer</holder>
+</copyright>
+
+<revhistory>
+  <revision>
+    <revnumber>0.1</revnumber>
+    <date>Jan 2013</date>
+    <authorinitials>SP</authorinitials>
+    <revremark>
+      Initial release.
+    </revremark>
+  </revision>
+</revhistory>
+
+<subjectset scheme="libraryofcongress">
+  <subject>
+    <subjectterm>Proxy Firewall</subjectterm>
+  </subject>
+</subjectset>

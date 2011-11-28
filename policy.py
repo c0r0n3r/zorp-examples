@@ -93,6 +93,13 @@ InetZone(name="servers.http_url_filter",
 	 admin_parent="servers"
 	)
 
+InetZone(name="servers.plug",
+	 addr=["172.16.21.33/32", ],
+	 inbound_services=["*"],
+	 outbound_services=["*"],
+	 admin_parent="servers"
+	)
+	
 class HttpProxyHeaderReplace(HttpProxy):
 	def config(self):
 		HttpProxy.config(self)
@@ -133,6 +140,36 @@ class SmtpProxyOneSideSsl(SmtpProxy):
 		self.ssl.server_connection_security=SSL_FORCE_SSL
 		self.ssl.server_verify_type=SSL_VERIFY_OPTIONAL_UNTRUSTED
 
+class HttpsProxyKeybridge(HttpProxy):
+	key_generator=X509KeyBridge(
+		key_file="/etc/zorp/keybridge/key.pem",
+		key_passphrase="passphrase",
+		cache_directory="/var/lib/zorp/keybridge-cache",
+		trusted_ca_files=(
+			"/etc/zorp/keybridge/ZorpGPL_TrustedCA.cert.pem",
+			"/etc/zorp/keybridge/ZorpGPL_TrustedCA.key.pem",
+			"passphrase"
+		),
+		untrusted_ca_files=(
+			"/etc/zorp/keybridge/ZorpGPL_UnTrustedCA.cert.pem",
+			"/etc/zorp/keybridge/ZorpGPL_UnTrustedCA.key.pem",
+			"passphrase"
+		)
+	)
+
+	def config(self):
+		HttpProxy.config(self)
+		self.require_host_header=FALSE
+		self.ssl.handshake_seq=SSL_HSO_SERVER_CLIENT
+		self.ssl.key_generator = self.key_generator
+		self.ssl.client_keypair_generate=TRUE
+		self.ssl.client_connection_security=SSL_FORCE_SSL
+		self.ssl.client_verify_type=SSL_VERIFY_OPTIONAL_UNTRUSTED
+		self.ssl.server_connection_security=SSL_FORCE_SSL
+		self.ssl.server_verify_type=SSL_VERIFY_REQUIRED_UNTRUSTED
+		self.ssl.server_ca_directory="/etc/ssl/certs"
+		self.ssl.server_trusted_certs_directory="/etc/zorp/certs"
+
 def zorp_instance():
 	#http services
 	Service(name="service_http_transparent",
@@ -156,6 +193,18 @@ def zorp_instance():
 		proxy_class=HttpProxyNonTransparent,
 		router=InbandRouter(forge_port=TRUE
 		)
+	)
+
+	#plug service
+	Service(name="service_plug",
+		proxy_class=PlugProxy,
+		router=TransparentRouter()
+	)
+
+	#https services
+	Service(name="service_https_transparent",
+		proxy_class=HttpsProxyKeybridge,
+		router=TransparentRouter()
 	)
 
 	#ftp services
@@ -216,6 +265,18 @@ def zorp_instance():
 			 'dst_port' : 8080,
 			 'src_zone' : ('clients', ),
 			 'service'  : 'service_http_transparent_directed'
+			},
+            		{
+			 'dst_port' : 443,
+			 'src_zone' : ('clients', ),
+			 'dst_zone' : ('servers.plug', ),
+			 'service'  : 'service_plug'
+			},
+            		{
+			 'dst_port' : 443,
+			 'src_zone' : ('clients', ),
+			 'dst_zone' : ('servers', ),
+			 'service'  : 'service_https_transparent'
 			},
 			{
 			 'dst_port': 25,

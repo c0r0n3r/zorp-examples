@@ -1,0 +1,35 @@
+== Use case ==
+
+indexterm:[protocol,HTTP]
+
+Most common usage of a proxy firewall -- including 'Zorp' -- nowadays is to rule the Internet, means take control over the 'HTTP' traffic. This is a simple, but good example to shows the advantage of a proxy firewall technology. When the system administrator has to grant access to the World Wide Web, usually only one rule is created, which opens port 80 to the Internet. It solves the original problem, but generates another one. With the help of this rule anybody can access any kind of service of any server on the port 80 independently from the fact, that it is a 'web' service or not.
+
+== Solution ==
+
+The application level solution of the problem is enforcing the 'HTTP' protocol on the traffic on the destination port 80. It can be done easily by 'Zorp', because there is a predefined proxy (+HttpProxy+) to enforce the 'HTTP' protocol. We only have to start a 'service' which sets this 'proxy' as +proxy_class+ parameter, when the traffic meets the mentioned requirements.
+
+[source,python]
+----
+include::sources/http_proxy_transparent.py[Transparent HTTP proxy]
+----
+
+<1> Imports anything from \texttt{Zorp.Http} module, which makes possible to use 'HttpProxy' related names without any prefix.
+<2> Creates a simple 'service' with the name +service_http_transparent+, which uses the predefined +HttpProxy+ of 'Zorp'.
+<3> Creates a 'rule' with the necessary conditions, traffic from 'zone' +clients+ to 'Zone' +servers+ targets the port 80 start a 'service' named +service_http_transparent+.
+
+== Result ==
+
+The result is as simple as possible. The traffic goes through a transparent service without the client or the server knows that, while the 'HTTP' protocol is enforced by the +HttpProxy+ of 'Zorp'.
+
+ifdef::backend-docbook[]
+image::images/zorp_audit_http_middle.png["Transparent HTTP proxy", title="Transparent HTTP proxy", scaledwidth="75%", align="center"]
+endif::[]
+
+ifdef::backend-xhtml11[]
+pass:[<h5>Transparent HTTP proxy</h5>
+<iframe width="640" height="360" src="http://www.youtube.com/embed/ohkpUAgt05k?list=SPE040858BE2F7D34C" frameborder="0" allowfullscreen></iframe>]
+endif::[]
+
+ifdef::backend-html5[]
+video::videos/zorp_virus_scan_http.ogv[width=640, poster="images/zorp_audit_http_middle.png"]
+endif::[]

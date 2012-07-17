@@ -29,3 +29,13 @@ include::what_good_is_zorp_en_content.asciidoc[]
 include::basic_concepts_en_content.asciidoc[]
 
 :leveloffset: 0
+
+= Simple Use Cases =
+
+== Protocol Enforcement ==
+
+:leveloffset: 1
+
+include::usecase_protocol_enforcement_en_content.asciidoc[]
+
+:leveloffset: 0

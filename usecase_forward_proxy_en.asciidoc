@@ -1,0 +1,3 @@
+= Forward Proxy =
+
+include::usecase_forward_proxy_en_content.asciidoc[]

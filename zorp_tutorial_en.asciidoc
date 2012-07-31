@@ -47,3 +47,11 @@ include::usecase_protocol_enforcement_en_content.asciidoc[]
 include::usecase_forward_proxy_en_content.asciidoc[]
 
 :leveloffset: 0
+
+== Reverse Proxy ==
+
+:leveloffset: 1
+
+include::usecase_reverse_proxy_en_content.asciidoc[]
+
+:leveloffset: 0

@@ -6,3 +6,4 @@ Simple Use Cases
 
   usecase_protocol_enforcement
   usecase_forward_proxy
+  usecase_reverse_proxy

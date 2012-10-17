@@ -1,0 +1,2 @@
+ip -4 rule add fwmark 0x80000000/0x80000000 lookup tproxy #<1>
+ip -4 route add local default dev lo table tproxy #<2>

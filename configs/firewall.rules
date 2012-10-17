@@ -1,0 +1,40 @@
+*mangle
+
+:PREROUTING ACCEPT
+# mark and accept connection already handled by Zorp <1>
+-A PREROUTING -m socket --transparent -j MARK --set-mark 0x80000000/0x80000000
+-A PREROUTING --match mark --mark 0x80000000/0x80000000 --jump ACCEPT
+-A PREROUTING -j DIVERT
+
+:INPUT ACCEPT
+-A INPUT -j DIVERT
+
+:FORWARD ACCEPT
+-A FORWARD -j DIVERT
+
+:OUTPUT ACCEPT
+
+:POSTROUTING ACCEPT
+-A POSTROUTING -j DIVERT
+
+# chain to collect KZorp related rules <2>
+:DIVERT
+# insert rules here to bypass KZorp <3>
+# jump to KZorp and mark the packet <4>
+-A DIVERT -j KZORP --tproxy-mark 0x80000000/0x80000000
+
+COMMIT
+
+*filter
+
+:INPUT DROP
+# accept earlier marked packet <5>
+-A INPUT -m mark --mark 0x80000000/0x80000000 -j ACCEPT
+
+:FORWARD DROP
+# accept connection relates to a packet filter service <6>
+-A FORWARD -m conntrack ! --ctstate INVALID -m service --service-type forward -j ACCEPT
+
+:OUTPUT ACCEPT
+
+COMMIT

@@ -30,6 +30,14 @@ include::basic_concepts_en_content.asciidoc[]
 
 :leveloffset: 0
 
+== Minimal Configuration ==
+
+:leveloffset: 1
+
+include::minimal_configuration_en_content.asciidoc[]
+
+:leveloffset: 0
+
 = Simple Use Cases =
 
 == Protocol Enforcement ==

@@ -1,0 +1,3 @@
+= Access Control =
+
+include::usecase_access_control_proxy_en_content.asciidoc[]

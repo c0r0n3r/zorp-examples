@@ -1,0 +1,39 @@
+anchor:usecase_access_control[Use case access control]
+indexterm:[protocol,FTP]
+
+== Use case ==
+
+It is a general use case that we want to grant access to 'FTP' server on the internet for our user to make possible downloading anything, but at the same time we want to prevent that our users can be able to upload anything.
+
+== Solution ==
+
+The application level solution of the problem is to accept the read-only commands of the 'FTP' protocol, but drop the commands used to write to the server (for example: +PUT+). As it is a general issue 'Zorp' gives a predefined proxy to do that work, so the system administrator don't have to do anything to implement a read-only 'FTP' access, only use that proxy.
+
+[source,python]
+----
+include::sources/ftp_proxy_readonly.py['FTP' read-only proxy]
+----
+
+<1> Creates a 'rule' matches to the 'FTP' traffic, as the destination port in the 'rule' is the standard port of the 'FTP' servers (+21+). 
+<2> Service uses the predefined +FtpProxyRO+, which analyzes the traffic and when we issue a read-only command, it will be sent successfully to the server. When we issue a write command an error message will be relied to the client, but nothing will be to the server, as 'Zorp' rejects them.
+
+== Result ==
+
+Any kind of read-only operation works successfully, but error message is shown on the client side when it tries to perform a write operation on the server.
+
+ifdef::backend-docbook[]
+image::images/zorp_access_ro_ftp.png["Read-only FTP proxy", title="Read-only FTP proxy", scaledwidth="75%", align="center"]
+endif::[]
+
+
+ifdef::backend-xhtml11[]
+pass:[<h5>Read-only FTP proxy</h5>
+<iframe width="640" height="360" src="http://www.youtube.com/embed/EriNAY0hhXU?list=SPE040858BE2F7D34C" frameborder="0" allowfullscreen></iframe>]
+endif::[]
+
+ifdef::backend-html5[]
+.Read-only FTP proxy
+video::videos/zorp_virus_scan_http.ogv[width=640, poster="images/zorp_access_ro_ftp.png"]
+endif::[]
+
+The configuration file sniplet above grants read-only access to the servers in the zone +servers+ for the users who come from the zone +clients+. Without the +src_zone+ and +dst_zone+ filters the 'rule' would grant access to any server for any user.

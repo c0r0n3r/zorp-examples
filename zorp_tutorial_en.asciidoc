@@ -55,3 +55,11 @@ include::usecase_forward_proxy_en_content.asciidoc[]
 include::usecase_reverse_proxy_en_content.asciidoc[]
 
 :leveloffset: 0
+
+== Access Control ==
+
+:leveloffset: 1
+
+include::usecase_access_control_en_content.asciidoc[]
+
+:leveloffset: 0

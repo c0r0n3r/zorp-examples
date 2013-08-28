@@ -6,6 +6,7 @@ Zorp GPL Tutorial
 
   introduction
   simple_use_cases
+  get_involved
 
 .. only:: html
 

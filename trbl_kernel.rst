@@ -1,3 +1,5 @@
+.. _kernel-debugging:
+
 Kernel debugging
 ================
 

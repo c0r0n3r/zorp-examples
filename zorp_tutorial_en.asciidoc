@@ -71,3 +71,13 @@ include::usecase_reverse_proxy_en_content.asciidoc[]
 include::usecase_access_control_en_content.asciidoc[]
 
 :leveloffset: 0
+
+= Get Involved =
+
+== Troubleshooting ==
+
+:leveloffset: 1
+
+include::troubleshooting_en_content.asciidoc[]
+
+:leveloffset: 0

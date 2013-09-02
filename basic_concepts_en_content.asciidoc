@@ -163,20 +163,46 @@ The question arises, what is the 'best match' to a traffic which comes from the 
 
 === What service is good for? ===
 
-The 'service' answers the earlier mentioned "how" question, as it determines what exactly happen with the traffic in the application layer of the 'ISO'/'OSI' model. After the best matching 'rule' has found, an instance of a 'service' set in the 'rule' starts to handle the new connection.
+The 'service' answers the earlier mentioned "how" question, as it determines what exactly happen with the traffic, whether it is analyzed in the application layer of the 'ISO'/'OSI' model or not, rejected or accepted. After the best matching 'rule' has found, an instance of a 'service' set in the 'rule' starts to handle the new connection.
 
 === How service works? ===
 
-Minimal configuration of a 'service' contains only a +name+ and a +proxy_class+ parameter. The +name+ parameter is used to refer the 'service' from other object (for example from a 'rule'). The +proxy_class+ parameter is the most important parameter in the point of view of a proxy firewall. The value of +proxy_class+ parameter determines what will happen with the traffic in the application layer. 
+There are three different service types in 'Zorp' with completely different functionality and configuration.
 
-=== How service can be configured? ===
+.+PFService+
 
-The mentioned minimal configuration is the following. It contains only the +name+ and the +proxy_class+ parameter.
++PFService+  transfers packet-filter level services, so if you want to transfer connections on the packet-filter level only and you don't want analyze application level traffic making decisions based on it use +PFService+. It gives you better performance as the decision about the traffic can be made in kernel space by 'KZorp' without the assistance of the user space firewall ('Zorp') itself.
+
+.+Service+
+
++Service+ transfers application-level ('proxy') services, so if you want to transfer connections on the application-level to make possible the audit, analysis, restriction or modification use +Service+. It gives you worse performance than +PFService+ as the decision about the traffic cannot be made only in kernel space ('KZorp') it needs the assistance of the 'Zorp', runs in the user space, which makes deeper and also more resource hungry operations.
+
+.+DenyService+
+
++DenyService+ rejects the connections in a predefined way. In general it can be used to handle the exceptions in your policy. If you have a general rule which grant access to any 'FTP' servers from any subnetwork, but you want to make an exception (for example there is a prohibited server) you can create a more specific 'rule' (with the server address in +dst_subnet+ condition) which rejects the traffic as it is set in the +DenyService+.
+
+=== How 'service' can be configured? ===
+
+Minimal configuration of a 'service' depends on its type, but at least must contain a name. The +name+ parameter is used to refer the 'service' from other object (for example from a 'rule').
+
+.+PFService+
+
+With the defaults of the additional parameters of +PFService+ transfers the traffic through the firewall in packet-filter level without passing it to the user space (just like in 'Netfilter').
+
+.+Service+
+
+In case of +Service+ +proxy_class+ parameter also mandatory. This is the most important parameter in the point of view of a proxy firewall, while its value determines what will happen with the traffic in the application layer.
+
+.+DenyService+
+
+With the defaults of the additional parameters of +DenyService+ drops the traffic silently (just like +DROP+ target in 'Netfilter').
 
 [source,python]
 .Minimal service configuration
 ----
-    Service(name='service_http', proxy_class=HttpProxy)
+    PFService(name='PFService')
+    Service(name='Service', proxy_class=HttpProxy)
+    DenyService(name='DenyService')
 ----
 
 == Proxy ==

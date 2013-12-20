@@ -1,0 +1,24 @@
+# sphinx related files
+_*
+.buildinfo
+.doctrees
+
+# generated files
+*.epub
+*.html
+*.odt
+*.pdf
+*.xml
+
+# vi swap files
+.*.swp
+
+# latex related files
+*.tex
+*.aux
+*.idx
+*.ist
+*.log
+*.out
+*.sty
+*.toc

@@ -8,3 +8,4 @@ Simple Use Cases
   usecase_forward_proxy
   usecase_reverse_proxy
   usecase_access_control
+  usecase_browser_type_forgery

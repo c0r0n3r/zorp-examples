@@ -25,81 +25,8 @@ from Zorp.Http import *
 from Zorp.Pop3 import *
 from Zorp.Smtp import *
 
-InetZone(name="clients",
-	 addr=["172.16.10.0/23", ], 
-	 inbound_services=["*"],
-	 outbound_services=["*"]
-	)
+from zones import *
 
-InetZone(name="servers",
-	 addr=["172.16.20.0/23", ],
-	 inbound_services=["*"],
-	 outbound_services=["*"]
-	)
-
-InetZone(name="servers.audit",
-	 addr=["172.16.21.1/32", ],
-	 inbound_services=["*"],
-	 outbound_services=["*"],
-	 admin_parent="servers"
-	)
-
-InetZone(name="servers.stack_clamav",
-	 addr=["172.16.21.5/32", ],
-	 inbound_services=["*"],
-	 outbound_services=["*"],
-	 admin_parent="servers"
-	)
-
-InetZone(name="servers.smtp_starttls",
-	 addr=["172.16.21.9/32", ],
-	 inbound_services=["*"],
-	 outbound_services=["*"],
-	 admin_parent="servers"
-	)
-
-InetZone(name="servers.smtp_one_sided_ssl",
-	 addr=["172.16.21.13/32", ],
-	 inbound_services=["*"],
-	 outbound_services=["*"],
-	 admin_parent="servers"
-	)
-
-InetZone(name="servers.http_stack_cat",
-	 addr=["172.16.21.17/32", ],
-	 inbound_services=["*"],
-	 outbound_services=["*"],
-	 admin_parent="servers"
-	)
-
-InetZone(name="servers.http_stack_tr",
-	 addr=["172.16.21.21/32", ],
-	 inbound_services=["*"],
-	 outbound_services=["*"],
-	 admin_parent="servers"
-	)
-
-InetZone(name="servers.http_header_replace",
-	 addr=["172.16.21.25/32", ],
-	 inbound_services=["*"],
-	 outbound_services=["*"],
-	 admin_parent="servers"
-	)
-
-InetZone(name="servers.http_url_filter",
-	 addr=["172.16.21.29/32", ],
-	 inbound_services=["*"],
-	 outbound_services=["*"],
-	 admin_parent="servers"
-	)
-
-InetZone(name="servers.plug",
-	 addr=["172.16.21.33/32", ],
-	 inbound_services=["*"],
-	 outbound_services=["*"],
-	 admin_parent="servers"
-	)
-	
 class HttpProxyHeaderReplace(HttpProxy):
 	def config(self):
 		HttpProxy.config(self)

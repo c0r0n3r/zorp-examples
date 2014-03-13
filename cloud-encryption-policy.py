@@ -17,77 +17,52 @@
 
 from Zorp.Core import *
 from Zorp.Http import *
+from Zorp.AnyPy import *
 from Zorp.Proxy import *
+
+import Zorp
+import Zorp.Stream
 
 from zones import *
 
+import DataHandler
+import Cypher
+
 class CloudEncryptionStackedProxy(AnyPyProxy):
-    stream = __import__('Zorp.Stream')
-
-    def __init__(self, data_handler, cypher)
-        super(CloudEncryptionStackedProxy).__init__()
-        self.data_handler = data_handler
-        self.cypher = cypher
-
     def config(self):
         self.client_max_line_length = 16384
 
-    def getData(self):
+        self.data_handler = DataHandler.XMLProxyDataHandler()
+        self.cypher = Cypher.NoCypher()
+
+    def readData(self):
         data = ""
         while True:
             try:
                 data += self.client_stream.read(1024)
-            except stream.StreamException, (code, lastline):
-                if code == stream.G_IO_STATUS_EOF:
-                    break
-                else:
-                    raise
+            except BaseException:
+                break
+            #except Zorp.Stream.StreamException, (code, lastline):
+            #    if code == Zorp.Stream.G_IO_STATUS_EOF:
+            #        break
+            #    else:
+            #        raise
 
         return data
 
     def proxyThread(self):
         try:
-            plain_raw_data = self.getData()
-            plain_parsed_data = self.data_handler.parse(plain_raw_data)
-            plain_sensitive_data = self.data_handler.getData(plain_parsed_data)
-            cyphered_parsed_data = self.data_handler.setData(parsed_data, cyphered_sensitive_data)
-            cyphered_raw_data = self.data_handler.compose(cyphered_parsed_data)
+            plain_raw_data = self.readData()
+            self.data_handler.parse(plain_raw_data)
+            self.data_handler.cypher(self.cypher, True)
+            cyphered_raw_data = self.data_handler.compose()
             self.server_stream.write(cyphered_raw_data)
             proxyLog(self, "cypher.info", 3, "Data successfully cyphered")
         except TypeError as e:
-            proxyLog(self, "cypher.error", 3, "Data cypher failed; error='%s'", e)
-            
+            proxyLog(self, "cypher.error", 3, "Data cypher failed; error='%s'", str(e))
 
-import xml.etree.ElementTree as ET
-class GoogleCalendarProxy(CloudEncryptionStackedProxy):
-    def processEventFeed(self, data, cypher_func):
-        proxyLog(self, "cypher.info", 3, "processEventFeed")
-        event_feed = gcalendar.CalendarEventFeedFromString(data)
-        if event_feed is None:
-            raise SyntaxError("event feed cannot be parsed")
 
-        for entry in event_feed.entry:
-            entry.title.text = cypher_func(entry.title.text)
-            for where in entry.where:
-                where.value_string = cypher_func(where.value_string)
-            entry.content.text = cypher_func(entry.content.text)
-
-        return event_feed.ToString()
-
-    def processEventEntry(self, data, cypher_func):
-        proxyLog(self, "cypher.info", 3, "processEventEntry '%s'", data)
-        event_entry = gcalendar.CalendarEventEntryFromString(data)
-        if event_entry is None:
-            raise ET.ParseError(data)
-
-        event_entry.title.text = cypher_func(event_entry.title.text)
-        for where in event_entry.where:
-            where.value_string = cypher_func(where.value_string)
-        event_entry.content.text = cypher_func(event_entry.content.text)
-
-        return event_entry.ToString()
-
-class CloudEncryptionHttpsKeyBrigeProxy(HttpProxy):
+class CloudEncryptionSSLProxy(HttpProxy):
     def config(self):
         HttpProxy.config(self)
 
@@ -122,9 +97,9 @@ class CloudEncryptionHttpsKeyBrigeProxy(HttpProxy):
         self.ssl.server_check_subject=FALSE
 
 
-class EncryptionHttpsProxy(MyHttpsKeyBrigeProxy):
+class CloudEncryptionHttpsProxy(CloudEncryptionSSLProxy):
     def config(self):
-        MyHttpsKeyBrigeProxy.config(self)
+        CloudEncryptionSSLProxy.config(self)
 
         self.request_header["Accept-Encoding"]=(HTTP_HDR_CHANGE_VALUE, "identity")
         self.rewrite_host_header = FALSE
@@ -136,18 +111,18 @@ class EncryptionHttpsProxy(MyHttpsKeyBrigeProxy):
         raise NotImplementedError
 
 
-class EncryptionHttpsGoogleCalendarProxy(EncryptionHttpsProxy):
+class CloudEncryptionHttpsGoogleCalendarProxy(CloudEncryptionHttpsProxy):
     def filterOutIrrelevanTraffic(self, method, url, version):
         if self.request_url_file.startswith("/calendar/feeds"):
-            self.request_stack["*"] = (HTTP_STK_DATA, (Z_STACK_PROXY, GoogleCalendarRequestProxy))
-            self.response_stack["*"] = (HTTP_STK_DATA, (Z_STACK_PROXY, GoogleCalendarResponseProxy))
+            self.request_stack["*"] = (HTTP_STK_DATA, (Z_STACK_PROXY, CloudEncryptionStackedProxy))
+            self.response_stack["*"] = (HTTP_STK_DATA, (Z_STACK_PROXY, CloudEncryptionStackedProxy))
         return HTTP_REQ_ACCEPT
 
 
 class CloudEncryptionHttpNonTransparentProxy(HttpProxyNonTransparent):
     def config(self):
         HttpProxyNonTransparent.config(self)
-        self.connect_proxy=CloudEncryptionHttpsKeyBrigeProxy
+        self.connect_proxy=CloudEncryptionHttpsGoogleCalendarProxy
         self.request["*"]=HTTP_REQ_ACCEPT
 
 

@@ -1,3 +1,5 @@
+from syslog import syslog
+
 class ProxyDataHandlerBase(object):
     STATE_INIT = 0
     STATE_PARSED = 1
@@ -14,6 +16,8 @@ class ProxyDataHandlerBase(object):
     def cypher(self, cypher, is_request):
         if self._state < ProxyDataHandlerBase.STATE_PARSED:
             raise TypeError('no plain data to cypher')
+
+        syslog.syslog('%s %s' % (str(is_request), 'alma'))
 
         cypher_func = cypher.encrypt if is_request else cypher.decrypt
         self._cypher(cypher_func)
@@ -37,7 +41,6 @@ class ProxyDataHandlerBase(object):
 
 
 import xml.etree.ElementTree as ET
-from syslog import syslog
 class XMLProxyDataHandler(ProxyDataHandlerBase):
     def _parse(self, plain_raw_data):
         syslog("%s" % plain_raw_data)
@@ -75,12 +78,16 @@ class GoogleCalendarProxyDataHandler(ProxyDataHandlerBase):
         syslog.syslog('parse \'%s\'' % plain_raw_data)
         try:
             self.gdata = gdata.GDataEntryFromString(plain_raw_data)
+            if self.gdata == None:
+                raise cET.ParseError
             syslog.syslog('parsed as gdataentry %s' % str(type(self.gdata)))
             return
         except cET.ParseError:
             pass
         try:
             self.gdata = gdata.GDataFeedFromString(plain_raw_data)
+            if self.gdata == None:
+                raise cET.ParseError
             syslog.syslog('parsed as gdata %s' % str(type(self.gdata)))
             return
         except cET.ParseError:

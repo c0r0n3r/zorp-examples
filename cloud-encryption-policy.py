@@ -21,7 +21,7 @@ from Zorp.AnyPy import *
 from Zorp.Proxy import *
 
 import Zorp
-import Zorp.Stream
+from Zorp import Stream
 
 from zones import *
 
@@ -32,23 +32,23 @@ config.options.kzorp_enabled=FALSE
 
 class CloudEncryptionStackedProxy(AnyPyProxy):
     def config(self):
-        self.client_max_line_length = 16384
+        self.client_max_line_length = 65535
 
         self.data_handler = DataHandler.GoogleCalendarProxyDataHandler()
-        self.cypher = Cypher.NoCypher('magic')
+        self.cypher = Cypher.NoCypher('')
 
     def readData(self):
         data = ""
         while True:
             try:
                 data += self.client_stream.read(1024)
-            except BaseException:
-                break
-            #except Zorp.Stream.StreamException, (code, lastline):
-            #    if code == Zorp.Stream.G_IO_STATUS_EOF:
-            #        break
-            #    else:
-            #        raise
+            #except BaseException:
+            #    break
+            except Stream.StreamException, (code, lastline):
+                if code == Stream.G_IO_STATUS_EOF:
+                    break
+                else:
+                    raise
 
         return data
 
@@ -75,7 +75,7 @@ class CloudEncryptionStackedProxyResponse(CloudEncryptionStackedProxy):
     def config(self):
         super(self.__class__, self).config()
 
-        self.is_request = True
+        self.is_request = False
 
 
 class CloudEncryptionSSLProxy(HttpProxy):

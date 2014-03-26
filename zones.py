@@ -20,77 +20,61 @@
 from Zorp.Core import *
 
 
+InetZone(name="internet",
+	 addrs=["0.0.0.0/0", ],
+         inbound_services="*",
+         outbound_services="*"
+	)
+
 InetZone(name="clients",
-	 addr=["172.16.10.0/23", ], 
-	 inbound_services=["*"],
-	 outbound_services=["*"]
+	 addrs=["172.16.10.0/23", ]
 	)
 
 InetZone(name="servers",
-	 addr=["172.16.20.0/23", ],
-	 inbound_services=["*"],
-	 outbound_services=["*"]
+	 addrs=["172.16.20.0/23", ]
 	)
 
 InetZone(name="servers.audit",
-	 addr=["172.16.21.1/32", ],
-	 inbound_services=["*"],
-	 outbound_services=["*"],
+	 addrs=["172.16.21.1/32", ],
 	 admin_parent="servers"
 	)
 
 InetZone(name="servers.stack_clamav",
-	 addr=["172.16.21.5/32", ],
-	 inbound_services=["*"],
-	 outbound_services=["*"],
+	 addrs=["172.16.21.5/32", ],
 	 admin_parent="servers"
 	)
 
 InetZone(name="servers.smtp_starttls",
-	 addr=["172.16.21.9/32", ],
-	 inbound_services=["*"],
-	 outbound_services=["*"],
+	 addrs=["172.16.21.9/32", ],
 	 admin_parent="servers"
 	)
 
 InetZone(name="servers.smtp_one_sided_ssl",
-	 addr=["172.16.21.13/32", ],
-	 inbound_services=["*"],
-	 outbound_services=["*"],
+	 addrs=["172.16.21.13/32", ],
 	 admin_parent="servers"
 	)
 
 InetZone(name="servers.http_stack_cat",
-	 addr=["172.16.21.17/32", ],
-	 inbound_services=["*"],
-	 outbound_services=["*"],
+	 addrs=["172.16.21.17/32", ],
 	 admin_parent="servers"
 	)
 
 InetZone(name="servers.http_stack_tr",
-	 addr=["172.16.21.21/32", ],
-	 inbound_services=["*"],
-	 outbound_services=["*"],
+	 addrs=["172.16.21.21/32", ],
 	 admin_parent="servers"
 	)
 
 InetZone(name="servers.http_header_replace",
-	 addr=["172.16.21.25/32", ],
-	 inbound_services=["*"],
-	 outbound_services=["*"],
+	 addrs=["172.16.21.25/32", ],
 	 admin_parent="servers"
 	)
 
 InetZone(name="servers.http_url_filter",
-	 addr=["172.16.21.29/32", ],
-	 inbound_services=["*"],
-	 outbound_services=["*"],
+	 addrs=["172.16.21.29/32", ],
 	 admin_parent="servers"
 	)
 
 InetZone(name="servers.plug",
-	 addr=["172.16.21.33/32", ],
-	 inbound_services=["*"],
-	 outbound_services=["*"],
+	 addrs=["172.16.21.33/32", ],
 	 admin_parent="servers"
 	)

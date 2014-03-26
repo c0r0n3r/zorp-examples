@@ -28,12 +28,14 @@ from zones import *
 import DataHandler
 import Cypher
 
+config.options.kzorp_enabled=FALSE
+
 class CloudEncryptionStackedProxy(AnyPyProxy):
     def config(self):
         self.client_max_line_length = 16384
 
-        self.data_handler = DataHandler.XMLProxyDataHandler()
-        self.cypher = Cypher.NoCypher()
+        self.data_handler = DataHandler.GoogleCalendarProxyDataHandler()
+        self.cypher = Cypher.NoCypher('magic')
 
     def readData(self):
         data = ""
@@ -54,12 +56,26 @@ class CloudEncryptionStackedProxy(AnyPyProxy):
         try:
             plain_raw_data = self.readData()
             self.data_handler.parse(plain_raw_data)
-            self.data_handler.cypher(self.cypher, True)
+            self.data_handler.cypher(self.cypher, self.is_request)
             cyphered_raw_data = self.data_handler.compose()
             self.server_stream.write(cyphered_raw_data)
-            proxyLog(self, "cypher.info", 3, "Data successfully cyphered")
-        except TypeError as e:
+            #proxyLog(self, "cypher.info", 3, "Data successfully cyphered")
+        except KeyError as e:
             proxyLog(self, "cypher.error", 3, "Data cypher failed; error='%s'", str(e))
+
+
+class CloudEncryptionStackedProxyRequest(CloudEncryptionStackedProxy):
+    def config(self):
+        super(self.__class__, self).config()
+
+        self.is_request = True
+
+
+class CloudEncryptionStackedProxyResponse(CloudEncryptionStackedProxy):
+    def config(self):
+        super(self.__class__, self).config()
+
+        self.is_request = True
 
 
 class CloudEncryptionSSLProxy(HttpProxy):
@@ -69,21 +85,21 @@ class CloudEncryptionSSLProxy(HttpProxy):
         self.transparent_mode=TRUE
 
         self.ssl.handshake_seq=SSL_HSO_SERVER_CLIENT
-	self.ssl.key_generator=X509KeyBridge(
-		key_file="/etc/zorp/keybridge/key.pem",
-		key_passphrase="passphrase",
-		cache_directory="/var/lib/zorp/keybridge-cache",
-		trusted_ca_files=(
-			"/etc/zorp/keybridge/ZorpGPL_TrustedCA.cert.pem",
-			"/etc/zorp/keybridge/ZorpGPL_TrustedCA.key.pem",
-			"passphrase"
-		),
-		untrusted_ca_files=(
-			"/etc/zorp/keybridge/ZorpGPL_UnTrustedCA.cert.pem",
-			"/etc/zorp/keybridge/ZorpGPL_UnTrustedCA.key.pem",
-			"passphrase"
-		)
-	)
+        self.ssl.key_generator=X509KeyBridge(
+                key_file="/etc/zorp/keybridge/key.pem",
+                key_passphrase="passphrase",
+                cache_directory="/var/lib/zorp/keybridge-cache",
+                trusted_ca_files=(
+                        "/etc/zorp/keybridge/ZorpGPL_TrustedCA.cert.pem",
+                        "/etc/zorp/keybridge/ZorpGPL_TrustedCA.key.pem",
+                        "passphrase"
+                ),
+                untrusted_ca_files=(
+                        "/etc/zorp/keybridge/ZorpGPL_UnTrustedCA.cert.pem",
+                        "/etc/zorp/keybridge/ZorpGPL_UnTrustedCA.key.pem",
+                        "passphrase"
+                )
+        )
 
         self.ssl.client_connection_security=SSL_FORCE_SSL
         self.ssl.client_keypair_generate=TRUE
@@ -113,9 +129,10 @@ class CloudEncryptionHttpsProxy(CloudEncryptionSSLProxy):
 
 class CloudEncryptionHttpsGoogleCalendarProxy(CloudEncryptionHttpsProxy):
     def filterOutIrrelevanTraffic(self, method, url, version):
+        proxyLog(self, "", 3, "Data cypher failed; uri='%s'", self.request_url_file)
         if self.request_url_file.startswith("/calendar/feeds"):
-            self.request_stack["*"] = (HTTP_STK_DATA, (Z_STACK_PROXY, CloudEncryptionStackedProxy))
-            self.response_stack["*"] = (HTTP_STK_DATA, (Z_STACK_PROXY, CloudEncryptionStackedProxy))
+            self.request_stack["*"] = (HTTP_STK_DATA, (Z_STACK_PROXY, CloudEncryptionStackedProxyRequest))
+            self.response_stack["*"] = (HTTP_STK_DATA, (Z_STACK_PROXY, CloudEncryptionStackedProxyResponse))
         return HTTP_REQ_ACCEPT
 
 
@@ -127,5 +144,5 @@ class CloudEncryptionHttpNonTransparentProxy(HttpProxyNonTransparent):
 
 
 def cloud_encryption_instance():
-	Service("cloud_encryption_service", CloudEncryptionHttpNonTransparentProxy, router=InbandRouter())
-	Listener(SockAddrInet("172.16.30.2", 8080), "cloud_encryption_service")
+    Service("cloud_encryption_service", CloudEncryptionHttpNonTransparentProxy, router=InbandRouter())
+    Listener(SockAddrInet("172.16.30.2", 8080), "cloud_encryption_service")

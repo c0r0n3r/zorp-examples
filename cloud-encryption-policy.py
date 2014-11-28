@@ -145,4 +145,4 @@ class CloudEncryptionHttpNonTransparentProxy(HttpProxyNonTransparent):
 
 def cloud_encryption_instance():
     Service("cloud_encryption_service", CloudEncryptionHttpNonTransparentProxy, router=InbandRouter())
-    Listener(SockAddrInet("172.16.30.2", 8080), "cloud_encryption_service")
+    Listener(SockAddrInet("192.168.49.137", 3128), "cloud_encryption_service")

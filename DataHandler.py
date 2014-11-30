@@ -17,7 +17,7 @@ class ProxyDataHandlerBase(object):
         if self._state < ProxyDataHandlerBase.STATE_PARSED:
             raise TypeError('no plain data to cypher')
 
-        syslog.syslog('%s %s' % (str(is_request), 'alma'))
+        syslog('%s %s' % (str(is_request), 'alma'))
 
         cypher_func = cypher.encrypt if is_request else cypher.decrypt
         self._cypher(cypher_func)
@@ -56,55 +56,28 @@ class XMLProxyDataHandler(ProxyDataHandlerBase):
         except AttributeError as e:
             raise TypeError(e)
 
-import gdata
-import syslog
-import xml.etree.ElementTree as ET
-import xml.etree.cElementTree as cET
+import json
 class GoogleCalendarProxyDataHandler(ProxyDataHandlerBase):
-    namespaces = { ''           : 'http://www.w3.org/2005/Atom',
-                   'gCal'       : 'http://schemas.google.com/gCal/2005',
-                   'gd'         : 'http://schemas.google.com/g/2005',
-                   'openSearch' : 'http://a9.com/-/spec/opensearchrss/1.0/',
-                 }
-    namespaces_registered = False
 
-    def __init__(self):
-        if not GoogleCalendarProxyDataHandler.namespaces_registered:
-            for (prefix, uri) in GoogleCalendarProxyDataHandler.namespaces.iteritems():
-                ET.register_namespace(prefix, uri)
-            GoogleCalendarProxyDataHandler.namespaces_registered = True
-        
     def _parse(self, plain_raw_data):
-        syslog.syslog('parse \'%s\'' % plain_raw_data)
+        syslog('parse \'%s\'' % plain_raw_data)
         try:
-            self.gdata = gdata.GDataEntryFromString(plain_raw_data)
-            if self.gdata == None:
-                raise cET.ParseError
-            syslog.syslog('parsed as gdataentry %s' % str(type(self.gdata)))
+            self.data = json.loads(plain_raw_data)
+            if self.data == None:
+                raise JSONDecodeError("No JSON object could be decoded")
+            syslog('parsed as json %s' % str(self.data))
             return
-        except cET.ParseError:
+        except ValueError:
             pass
-        try:
-            self.gdata = gdata.GDataFeedFromString(plain_raw_data)
-            if self.gdata == None:
-                raise cET.ParseError
-            syslog.syslog('parsed as gdata %s' % str(type(self.gdata)))
-            return
-        except cET.ParseError:
-            pass
-        self.gdata = None
-        syslog.syslog('unknown %s' % plain_raw_data)
+        self.data = None
+        syslog('unknown %s' % plain_raw_data)
 
     def _cypher(self, cypher_func):
-        if isinstance(self.gdata, gdata.GDataFeed):
-            entries = self.gdata.entry
-        elif isinstance(self.gdata, gdata.GDataEntry):
-            entries = [self.gdata, ]
+        if 'kind' in self.data and self.data['kind'] == 'calendar#events':
+            for event in self.data['items']:
+                event['summary'] = cypher_func(event['summary'])
         else:
-            return
-
-        for entry in entries:
-            entry.title.text = cypher_func(entry.title.text)
+            self.data['summary'] = cypher_func(self.data['summary'])
 
     def _compose(self):
-        return str(self.gdata)
+        return json.dumps(self.data)

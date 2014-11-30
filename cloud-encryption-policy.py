@@ -130,7 +130,7 @@ class CloudEncryptionHttpsProxy(CloudEncryptionSSLProxy):
 class CloudEncryptionHttpsGoogleCalendarProxy(CloudEncryptionHttpsProxy):
     def filterOutIrrelevanTraffic(self, method, url, version):
         proxyLog(self, "", 3, "Data cypher failed; uri='%s'", self.request_url_file)
-        if self.request_url_file.startswith("/calendar/feeds"):
+        if self.request_url_file.startswith("/calendar/v3/calendars"):
             self.request_stack["*"] = (HTTP_STK_DATA, (Z_STACK_PROXY, CloudEncryptionStackedProxyRequest))
             self.response_stack["*"] = (HTTP_STK_DATA, (Z_STACK_PROXY, CloudEncryptionStackedProxyResponse))
         return HTTP_REQ_ACCEPT

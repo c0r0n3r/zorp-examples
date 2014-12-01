@@ -45,13 +45,16 @@ class Base64Cypher(BaseCypher):
 
 class RSAKeyCypher(BaseCypher):
     m2c = __import__('M2Crypto')
+    base64 = __import__('base64')
 
     def __init__(self, key_file, magic=""):
         super(RSAKeyCypher, self).__init__(magic)
         self.key = RSAKeyCypher.m2c.RSA.load_key(key_file)
 
     def _encrypt(self, plaintext):
-        return key.public_encrypt(plaintext, RSAKeyCypher.m2c.RSA.pkcs1_oaep_padding)
+        secret = self.key.public_encrypt(plaintext, RSAKeyCypher.m2c.RSA.pkcs1_oaep_padding)
+        return RSAKeyCypher.base64.b64encode(secret)
 
     def _decrypt(self, cyphertext):
-        return key.private_decrypt(cyphertext, RSAKeyCypher.m2c.RSA.pkcs1_oaep_padding)
+        secret = RSAKeyCypher.base64.b64decode(cyphertext)
+        return self.key.private_decrypt(secret, RSAKeyCypher.m2c.RSA.pkcs1_oaep_padding).replace('\0','')
